@@ -26,22 +26,21 @@ public class StackTraceUnserializeTest
             "       ... 68 more";
 
 
-    static final String EXCEPTION_IN_THREAD = "Exception in thread \"main\" java.lang.RuntimeException: yolo\n" +
+    static final String EXCEPTION_IN_THREAD = "Exception in thread \"main\" java.lang.RuntimeException: msg\n" +
             "\tat Main.main(StackTraceUnserialize.java:107)\n" +
             "\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
             "\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n" +
             "\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n" +
             "\tat java.lang.reflect.Method.invoke(Method.java:497)\n" +
             "\tat com.intellij.rt.execution.application.AppMain.main(AppMain.java:140)\n" +
-            "Caused by: java.lang.UnsupportedClassVersionError: yolo\n" +
+            "Caused by: java.lang.UnsupportedClassVersionError: msg\n" +
             "\t... 6 more";
 
 
     @Test
     public void test_exception_in_header() throws Throwable
     {
-        StackTraceUnserialize serialize = new StackTraceUnserialize();
-        Throwable th = serialize.unserialize(CAUSE_IN_HEADER);
+        Throwable th = StackTraceUnserialize.unserialize(CAUSE_IN_HEADER);
 
         Assert.assertTrue(th instanceof Error);
         Assert.assertEquals("My Exception msg", th.getMessage());
@@ -56,35 +55,31 @@ public class StackTraceUnserializeTest
     @Test
     public void test_exception_in_thread() throws Throwable
     {
-        StackTraceUnserialize serialize = new StackTraceUnserialize();
-        Throwable th = serialize.unserialize(EXCEPTION_IN_THREAD);
+        Throwable th = StackTraceUnserialize.unserialize(EXCEPTION_IN_THREAD);
 
         Assert.assertTrue(th instanceof RuntimeException);
-        Assert.assertEquals("yolo", th.getMessage());
+        Assert.assertEquals("msg", th.getMessage());
         Assert.assertNotNull(th.getCause());
         Assert.assertTrue(th.getCause() instanceof UnsupportedClassVersionError);
-        Assert.assertEquals("yolo", th.getCause().getMessage());
+        Assert.assertEquals("msg", th.getCause().getMessage());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_empty_input()
     {
-        StackTraceUnserialize unserialize = new StackTraceUnserialize();
-        Throwable th = unserialize.unserialize("");
+        StackTraceUnserialize.unserialize("");
     }
 
     @Test(expected = Exception.class)
     public void test_null_input()
     {
-        StackTraceUnserialize unserialize = new StackTraceUnserialize();
-        Throwable th = unserialize.unserialize(null);
+        StackTraceUnserialize.unserialize(null);
     }
 
     @Test
     public void test_exception_without_stacktrace()
     {
-        StackTraceUnserialize unserialize = new StackTraceUnserialize();
-        Throwable th = unserialize.unserialize("java.lang.OutOfMemoryError:");
+        Throwable th = StackTraceUnserialize.unserialize("java.lang.OutOfMemoryError:");
         Assert.assertTrue(th instanceof OutOfMemoryError);
     }
 
@@ -93,8 +88,7 @@ public class StackTraceUnserializeTest
     {
         String trace = "\tat ch.abertschi.unserialize.StackTraceUnserialize.unserialize(StackTraceUnserialize.java:36)\n";
 
-        StackTraceUnserialize unserialize = new StackTraceUnserialize();
-        Throwable th = unserialize.unserialize(trace);
+        Throwable th = StackTraceUnserialize.unserialize(trace);
         Assert.assertTrue(th instanceof RuntimeException);
         Assert.assertEquals(th.getStackTrace().length, 1);
     }
@@ -102,8 +96,7 @@ public class StackTraceUnserializeTest
     @Test(expected = IllegalArgumentException.class)
     public void test_exception_type_not_found()
     {
-        StackTraceUnserialize unserialize = new StackTraceUnserialize();
-        Throwable th = unserialize.unserialize("java.lang.Unknown:");
+        StackTraceUnserialize.unserialize("java.lang.Unknown:");
     }
 
 }

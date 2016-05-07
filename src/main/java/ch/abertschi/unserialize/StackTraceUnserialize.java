@@ -10,18 +10,18 @@ import java.util.regex.Pattern;
  */
 public class StackTraceUnserialize
 {
-    static final String VALID_CLASSNAME = "[^\\(\\)\\\\\\[\\] ]*";
+    private static final String VALID_CLASSNAME = "[^\\(\\)\\\\\\[\\] ]*";
 
-    static final Pattern PATTERN_EXCEPTION_AND_MESSAGE = Pattern.compile("(?=[^(Caused by:)])([^: ]*:)(.*)");
+    private static final Pattern PATTERN_EXCEPTION_AND_MESSAGE = Pattern.compile("(?=[^(Caused by:)])([^: ]*:)(.*)");
 
     // match stacktrace elements in form of //org.jboss.modules.ModuleClassLoader.findClass(ModuleClassLoader.java:213) [jboss-modules.jar:1.3.3.Final-redhat-1]
-    static final Pattern PATTERN_STACKTRACE = Pattern.compile("at ([^(: \\t\\r]*)?\\((.*?)\\)(\\[(.*?)\\])?");
+    private static final Pattern PATTERN_STACKTRACE = Pattern.compile("at ([^(: \\t\\r]*)?\\((.*?)\\)(\\[(.*?)\\])?");
 
-    public StackTraceUnserialize()
+    private StackTraceUnserialize()
     {
     }
 
-    public Throwable unserialize(final String stacktrace)
+    public static Throwable unserialize(final String stacktrace)
     {
         Map<Integer, StackTraceElement> elements = parseStackTraceElements(stacktrace);
 
@@ -45,7 +45,7 @@ public class StackTraceUnserialize
         }
     }
 
-    Throwable buildThrowable(Map<Integer, CauseElement> causes, Map<Integer, StackTraceElement> elements)
+    protected static Throwable buildThrowable(Map<Integer, CauseElement> causes, Map<Integer, StackTraceElement> elements)
     {
         Throwable rootThrowable = null;
         Integer lastStackTraceIndex = Integer.MAX_VALUE;
@@ -73,7 +73,7 @@ public class StackTraceUnserialize
         return rootThrowable;
     }
 
-    Map<Integer, CauseElement> parseExceptionAndMessage(final String trace)
+    protected static Map<Integer, CauseElement> parseExceptionAndMessage(final String trace)
     {
         Map<Integer, CauseElement> returns = new TreeMap<Integer, CauseElement>();
         Matcher matcher = PATTERN_EXCEPTION_AND_MESSAGE.matcher(trace);
@@ -98,7 +98,7 @@ public class StackTraceUnserialize
         return returns;
     }
 
-    Map<Integer, StackTraceElement> parseStackTraceElements(final String trace)
+    protected static Map<Integer, StackTraceElement> parseStackTraceElements(final String trace)
     {
         Map<Integer, StackTraceElement> stack = new TreeMap<Integer, StackTraceElement>();
         Matcher matcher = PATTERN_STACKTRACE.matcher(trace);
@@ -133,11 +133,11 @@ public class StackTraceUnserialize
         return stack;
     }
 
-    boolean isInClassPath(String type)
+    protected static boolean isInClassPath(String type)
     {
         try
         {
-            Class<?> clazz = Class.forName(type);
+            Class.forName(type);
             return true;
         }
         catch (ClassNotFoundException e)
@@ -146,9 +146,9 @@ public class StackTraceUnserialize
         }
     }
 
-    Throwable lookupThrowable(String type, String msg)
+    protected static Throwable lookupThrowable(String type, String msg)
     {
-        Object instance = null;
+        Object instance;
         try
         {
             Class<?> clazz = Class.forName(type);
@@ -174,7 +174,7 @@ public class StackTraceUnserialize
         return (Throwable) instance;
     }
 
-    public static class CauseElement
+    protected static class CauseElement
     {
         private String type;
         private String message;

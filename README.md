@@ -35,7 +35,7 @@ throw StackTraceUnserialize.unserialize(stacktrace);
 
 ## Examples of serialized stacktraces
 
-StackTrace in the format of `Throwable#printStackTrace(PrintWriter)` are supported.
+StackTraces in the format of `Throwable#printStackTrace(PrintWriter)` are supported.
 
 ```
 java.lang.OutOfMemoryError:

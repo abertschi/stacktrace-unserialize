@@ -10,14 +10,9 @@ import java.util.regex.Pattern;
  */
 public class StackTraceUnserialize
 {
-    // match exceptions in form of Caused by: java.lang.ClassNotFoundException: message
-    static final Pattern PATTERN_IN_THREAD = Pattern.compile("(Exception in thread )(\"[^\"]*\")([^:]*)(.*)");
+    static final String VALID_CLASSNAME = "[^\\(\\)\\\\\\[\\] ]*";
 
-    // match exception in form of: java.util.concurrent.CompletionException: message
-    static final Pattern PATTERN_PLAIN_EXCEPTION = Pattern.compile("(^[^: ]*:)(.*)");
-
-    // match root cause in form of //Caused by: java.lang.ClassNotFoundException: message
-    static final Pattern PATTERN_CAUSED_BY = Pattern.compile("(Caused by: )(\\S*[^:\\(\\)\\t\\r])(.*)"); // TODO: combine with plain exception
+    static final Pattern PATTERN_EXCEPTION_AND_MESSAGE = Pattern.compile("(?=[^(Caused by:)])([^: ]*:)(.*)");
 
     // match stacktrace elements in form of //org.jboss.modules.ModuleClassLoader.findClass(ModuleClassLoader.java:213) [jboss-modules.jar:1.3.3.Final-redhat-1]
     static final Pattern PATTERN_STACKTRACE = Pattern.compile("at ([^(: \\t\\r]*)?\\((.*?)\\)(\\[(.*?)\\])?");
@@ -31,13 +26,26 @@ public class StackTraceUnserialize
         Map<Integer, StackTraceElement> elements = parseStackTraceElements(stacktrace);
 
         TreeMap<Integer, CauseElement> causes = new TreeMap<Integer, CauseElement>(Collections.reverseOrder());
-        causes.putAll(parseHeader(stacktrace));
-        causes.putAll(parseRootCauses(stacktrace));
+        causes.putAll(parseExceptionAndMessage(stacktrace));
 
-        return buildThrowable(causes, elements);
+        if (causes.isEmpty() && elements.isEmpty())
+        {
+            String msg = String.format("No valid stacktrace given. No exception or stacktrace element found. "
+                    + "Input: %s", stacktrace == null ? "null" : stacktrace.isEmpty() ? "<empty>" : stacktrace);
+
+            throw new IllegalArgumentException(msg);
+        }
+        else
+        {
+            if (causes.isEmpty())
+            {
+                causes.put(0, new CauseElement(RuntimeException.class.getCanonicalName(), ""));
+            }
+            return buildThrowable(causes, elements);
+        }
     }
 
-    protected Throwable buildThrowable(Map<Integer, CauseElement> causes, Map<Integer, StackTraceElement> elements)
+    Throwable buildThrowable(Map<Integer, CauseElement> causes, Map<Integer, StackTraceElement> elements)
     {
         Throwable rootThrowable = null;
         Integer lastStackTraceIndex = Integer.MAX_VALUE;
@@ -65,35 +73,32 @@ public class StackTraceUnserialize
         return rootThrowable;
     }
 
-
-    public Map<Integer, CauseElement> parseHeader(final String trace)
+    Map<Integer, CauseElement> parseExceptionAndMessage(final String trace)
     {
         Map<Integer, CauseElement> returns = new TreeMap<Integer, CauseElement>();
-        Matcher matcher = PATTERN_IN_THREAD.matcher(trace);
+        Matcher matcher = PATTERN_EXCEPTION_AND_MESSAGE.matcher(trace);
         while (matcher.find())
         {
-            CauseElement element = new CauseElement();
-            element.message = matcher.group(3);
-            element.type = matcher.group(2);
-            returns.put(matcher.start(), element);
-        }
-        if (returns.isEmpty())
-        {
-            matcher = PATTERN_PLAIN_EXCEPTION.matcher(trace);
-            if (matcher.find())
+            String type = matcher.group(1);
+            String message = matcher.group(2);
+
+            if (!type.isEmpty())
             {
-                CauseElement element = new CauseElement();
-                String type = matcher.group(1);
-                type = type.substring(0, type.length() - 1);
-                element.type = type;
-                element.message = matcher.group(2);
-                returns.put(matcher.start(), element);
+                type = type.substring(0, type.length() - 1); // remove ":" as in exception: message
+                type = type.trim();
+                message = message.trim();
+
+                if (type.matches(VALID_CLASSNAME)
+                        && isInClassPath(type))
+                {
+                    returns.put(matcher.start(), new CauseElement(type, message));
+                }
             }
         }
         return returns;
     }
 
-    public Map<Integer, StackTraceElement> parseStackTraceElements(final String trace)
+    Map<Integer, StackTraceElement> parseStackTraceElements(final String trace)
     {
         Map<Integer, StackTraceElement> stack = new TreeMap<Integer, StackTraceElement>();
         Matcher matcher = PATTERN_STACKTRACE.matcher(trace);
@@ -128,22 +133,20 @@ public class StackTraceUnserialize
         return stack;
     }
 
-    public static Map<Integer, CauseElement> parseRootCauses(final String trace)
+    boolean isInClassPath(String type)
     {
-        Map<Integer, CauseElement> causes = new TreeMap<Integer, CauseElement>();
-
-        Matcher matcher = PATTERN_CAUSED_BY.matcher(trace);
-        while (matcher.find())
+        try
         {
-            String type = matcher.group(2);
-            type = type.substring(0, type.length() - 2);
-            String msg = matcher.group(3);
-            causes.put(matcher.start(), new CauseElement(type, msg));
+            Class<?> clazz = Class.forName(type);
+            return true;
         }
-        return causes;
+        catch (ClassNotFoundException e)
+        {
+            return false;
+        }
     }
 
-    public static Throwable lookupThrowable(String type, String msg)
+    Throwable lookupThrowable(String type, String msg)
     {
         Object instance = null;
         try
@@ -176,7 +179,9 @@ public class StackTraceUnserialize
         private String type;
         private String message;
 
-        public CauseElement() {}
+        public CauseElement()
+        {
+        }
 
         public CauseElement(String type, String msg)
         {

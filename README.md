@@ -2,7 +2,7 @@
 
 > Java StackTrace as String to Throwable
 
-The aim of this project is to provide a utility to unserialize StackTraces from Strings.
+The aim of this project is to provide a utility to unserialize a Java StackTrace from String to `java.lang.Throwable`.
 
 ## Install
 ```xml
@@ -32,7 +32,7 @@ throw unserialize.unserialize(stacktrace);
 
 - Throwable
 
-If an exception type can not be found on classpath, a `java.lang.RuntimeException` will be used instead.
+If an exception type can not be found on classpath, a `java.lang.RuntimeException` is used instead.
 
 ## Examples of serialized stacktraces
 ```
@@ -65,5 +65,3 @@ Exception in thread "main" java.lang.RuntimeException: My Message
      Caused by: java.lang.UnsupportedClassVersionError: My Message
      ... 6 more;
 ```
-
-## License

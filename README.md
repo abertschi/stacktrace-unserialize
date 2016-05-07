@@ -11,7 +11,7 @@ Unserialize your StackTraces from `String` to `java.lang.Throwable`.
 <dependency>
     <groupId>ch.abertschi.unserialize</groupId>
     <artifactId>stacktrace-unserialize</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 </dependency>    
 ```
 

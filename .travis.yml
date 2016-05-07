@@ -4,3 +4,5 @@ script:
 addons:
     code_climate:
         repo_token: e2eaf92474ffc5ab11867e65c9a35100191b80bf5473a1421eac9e29ed1d88f7
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

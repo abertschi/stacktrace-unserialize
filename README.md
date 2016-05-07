@@ -1,4 +1,8 @@
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/ch.abertschi.unserialize/stacktrace-unserialize/badge.svg?style=flat)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.abertschi.unserialize%22)
 [![Build Status](https://travis-ci.org/abertschi/stacktrace-unserialize.svg?branch=master)](https://travis-ci.org/abertschi/stacktrace-unserialize)
+[![codecov](https://codecov.io/gh/abertschi/stacktrace-unserialize/branch/master/graph/badge.svg)](https://codecov.io/gh/abertschi/stacktrace-unserialize)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6f82ce480b504210ba6c92f909ddb8f7)](https://www.codacy.com/app/abertschi/stacktrace-unserialize?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=abertschi/stacktrace-unserialize&amp;utm_campaign=Badge_Grade)
+[![Apache 2](http://img.shields.io/badge/license-APACHE2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 # stacktrace-unserialize
 
